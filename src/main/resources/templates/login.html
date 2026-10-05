@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>用户登录 - 流浪猫救助管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 80px 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            padding: 40px;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102,126,234,0.4);
+        }
+
+        .message {
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+            display: none;
+        }
+
+        .message-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .text-center {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .text-center a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .text-center a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="card">
+        <h2>用户登录</h2>
+
+        <div id="messageBox" class="message"></div>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label>手机号/邮箱</label>
+                <input type="text" id="account" class="form-control" placeholder="请输入手机号或邮箱" required>
+            </div>
+            <div class="form-group">
+                <label>密码</label>
+                <input type="password" id="password" class="form-control" placeholder="请输入密码" required>
+            </div>
+            <button type="submit" class="btn btn-primary">登录</button>
+        </form>
+        <div class="text-center">
+            还没有账号？<a href="/register">立即注册</a>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    function showMessage(msg) {
+        var messageBox = $('#messageBox');
+        messageBox.addClass('message-error');
+        messageBox.text(msg);
+        messageBox.show();
+
+        setTimeout(function() {
+            messageBox.fadeOut();
+        }, 3000);
+    }
+
+    $('#loginForm').submit(function(e) {
+        e.preventDefault();
+
+        var account = $('#account').val();
+        var password = $('#password').val();
+
+        if (!account) {
+            showMessage('请输入账号');
+            return;
+        }
+        if (!password) {
+            showMessage('请输入密码');
+            return;
+        }
+
+        $.ajax({
+            url: '/user/login',
+            type: 'POST',
+            data: {
+                account: account,
+                password: password
+            },
+            dataType: 'json',
+            xhrFields: { withCredentials: true },
+            success: function(res) {
+                console.log('登录响应:', res);
+                if (res.code === 200 && res.data) {
+                    // 根据后端返回的跳转路径进行跳转
+                    if (res.data.redirect) {
+                        window.location.href = res.data.redirect;
+                    } else {
+                        window.location.href = '/';
+                    }
+                } else {
+                    showMessage(res.message || '登录失败');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('登录错误:', error);
+                showMessage('网络错误，请重试');
+            }
+        });
+    });
+</script>
+</body>
+</html>

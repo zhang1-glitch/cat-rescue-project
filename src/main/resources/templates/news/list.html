@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>救助资讯 - 流浪猫救助管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background-color: #f5f5f5;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .header .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .logo a {
+            color: white;
+            text-decoration: none;
+        }
+
+        .nav {
+            display: flex;
+            gap: 30px;
+        }
+
+        .nav a {
+            color: white;
+            text-decoration: none;
+        }
+
+        .user-info a {
+            color: white;
+            text-decoration: none;
+            margin-left: 15px;
+        }
+
+        .main {
+            min-height: calc(100vh - 200px);
+            padding: 40px 0;
+        }
+
+        .footer {
+            background-color: #333;
+            color: #999;
+            text-align: center;
+            padding: 30px 0;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .category-list {
+            list-style: none;
+        }
+
+        .category-list li {
+            margin: 10px 0;
+        }
+
+        .category-link {
+            display: block;
+            padding: 8px 12px;
+            color: #333;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+
+        .category-link:hover {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .news-item {
+            display: flex;
+            gap: 15px;
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .news-item:last-child {
+            border-bottom: none;
+        }
+
+        .news-image {
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 8px;
+            background-color: #eee;
+        }
+
+        .news-content {
+            flex: 1;
+        }
+
+        .news-title {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .news-title a {
+            color: #333;
+            text-decoration: none;
+        }
+
+        .news-title a:hover {
+            color: #667eea;
+        }
+
+        .news-summary {
+            color: #666;
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+
+        .news-meta {
+            color: #999;
+            font-size: 12px;
+        }
+
+        .news-meta span {
+            margin-right: 15px;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 50px;
+            color: #999;
+        }
+
+        .hot-news-item {
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .hot-news-item a {
+            color: #333;
+            text-decoration: none;
+        }
+
+        .hot-news-item a:hover {
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <div class="container">
+        <div class="logo">
+            <a href="/">流浪猫救助管理系统</a>
+        </div>
+        <div class="nav">
+            <a href="/">首页</a>
+            <a href="/cat/list">猫咪列表</a>
+            <a href="/news/list">救助资讯</a>
+            <a href="/clue/submit">提交线索</a>
+            <a href="/donation/donate">爱心捐款</a>
+        </div>
+        <div class="user-info" th:if="${session.user != null}">
+            <span>欢迎，<span th:text="${session.user.nickname}"></span></span>
+            <a href="/user/profile">个人中心</a>
+            <a href="/user/logout">退出</a>
+        </div>
+        <div class="user-info" th:unless="${session.user != null}">
+            <a href="/login">登录</a>
+            <a href="/register">注册</a>
+        </div>
+    </div>
+</div>
+
+<div class="main">
+    <div class="container">
+        <div style="display: flex; gap: 20px;">
+            <div style="width: 250px;">
+                <div class="card">
+                    <h3>资讯分类</h3>
+                    <ul class="category-list">
+                        <li><a href="/news/list" class="category-link">全部</a></li>
+                        <li><a href="/news/list?type=0" class="category-link">救助动态</a></li>
+                        <li><a href="/news/list?type=1" class="category-link">科普文章</a></li>
+                        <li><a href="/news/list?type=2" class="category-link">活动通知</a></li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h3>热门推荐</h3>
+                    <div id="hotNews"></div>
+                </div>
+            </div>
+
+            <div style="flex: 1;">
+                <div class="card">
+                    <h2 style="margin-bottom: 20px;">救助资讯</h2>
+
+                    <div th:if="${#lists.isEmpty(newsList)}" class="empty">
+                        <p>暂无资讯</p>
+                    </div>
+
+                    <div th:each="news : ${newsList}" class="news-item">
+                        <div th:if="${news.coverImage == null}"
+                             style="width: 120px; height: 120px; background-color: #667eea; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 40px;">
+                        </div>
+                        <div class="news-content">
+                            <h3 class="news-title">
+                                <a th:href="'/news/detail/' + ${news.id}" th:text="${news.title}">资讯标题</a>
+                            </h3>
+                            <p class="news-summary" th:text="${#strings.length(news.content) > 100 ? #strings.substring(news.content, 0, 100) + '...' : news.content}">
+                                资讯摘要
+                            </p>
+                            <div class="news-meta">
+                                <span>发布时间：<span th:text="${news.dateCreateTime}"></span></span>
+                                <span>浏览 <span th:text="${news.viewCount}">0</span>次</span>
+                                <span>❤️ 点赞 <span th:text="${news.likeCount}">0</span>次</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="footer">
+    <div class="container">
+        <p>© 2024 流浪猫救助管理系统 | 用爱心温暖每一个生命</p>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $.get('/news/hot', function(res) {
+        if (res.code === 200 && res.data && res.data.length > 0) {
+            var html = '';
+            for (var i = 0; i < res.data.length; i++) {
+                html += '<div class="hot-news-item">' +
+                        '<a href="/news/detail/' + res.data[i].id + '">' + res.data[i].title + '</a>' +
+                        '</div>';
+            }
+            $('#hotNews').html(html);
+        } else {
+            $('#hotNews').html('<p style="color: #999;">暂无热门资讯</p>');
+        }
+    }).fail(function() {
+        $('#hotNews').html('<p style="color: #999;">暂无热门资讯</p>');
+    });
+</script>
+</body>
+</html>

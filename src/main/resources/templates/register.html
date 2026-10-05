@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>用户注册 - 流浪猫救助管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            padding: 30px;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .code-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .code-group .form-control {
+            flex: 1;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102,126,234,0.4);
+        }
+
+        .btn-code {
+            background-color: #667eea;
+            color: white;
+            white-space: nowrap;
+            width: 120px;
+        }
+
+        .btn-code:hover {
+            background-color: #5a67d8;
+        }
+
+        .btn-code:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .message {
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+            display: none;
+        }
+
+        .message-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .text-center {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .text-center a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .text-center a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="card">
+        <h2>用户注册</h2>
+
+        <div id="messageBox" class="message"></div>
+
+        <form id="registerForm">
+            <div class="form-group">
+                <label>手机号</label>
+                <input type="tel" id="phone" class="form-control" placeholder="请输入手机号" required>
+            </div>
+            <div class="form-group">
+                <label>验证码</label>
+                <div class="code-group">
+                    <input type="text" id="verifyCode" class="form-control" placeholder="请输入验证码" required>
+                    <button type="button" id="getCodeBtn" class="btn btn-code">获取验证码</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>昵称</label>
+                <input type="text" id="nickname" class="form-control" placeholder="请输入昵称" required>
+            </div>
+            <div class="form-group">
+                <label>密码</label>
+                <input type="password" id="password" class="form-control" placeholder="请输入密码（至少6位）" required>
+            </div>
+            <div class="form-group">
+                <label>确认密码</label>
+                <input type="password" id="confirmPassword" class="form-control" placeholder="请再次输入密码" required>
+            </div>
+            <button type="submit" class="btn btn-primary">注册</button>
+        </form>
+        <div class="text-center">
+            已有账号？<a href="/login">立即登录</a>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    var countdown = 0;
+    var timer = null;
+
+    function showMessage(msg, type) {
+        var messageBox = $('#messageBox');
+        messageBox.removeClass('message-success message-error');
+        messageBox.addClass(type === 'success' ? 'message-success' : 'message-error');
+        messageBox.text(msg);
+        messageBox.show();
+
+        setTimeout(function() {
+            messageBox.fadeOut();
+        }, 3000);
+    }
+
+    // 获取验证码按钮点击事件
+    $('#getCodeBtn').click(function() {
+        if (countdown > 0) {
+            showMessage('请等待 ' + countdown + ' 秒后再试', 'error');
+            return;
+        }
+
+        var phone = $('#phone').val();
+        if (!phone) {
+            showMessage('请先输入手机号', 'error');
+            return;
+        }
+
+        if (!/^1[3-9]\d{9}$/.test(phone)) {
+            showMessage('请输入正确的11位手机号', 'error');
+            return;
+        }
+
+        // 禁用按钮，开始倒计时
+        var btn = $('#getCodeBtn');
+        btn.prop('disabled', true);
+        btn.text('发送中...');
+
+        // 发送请求
+        $.ajax({
+            url: '/user/sendCode',
+            type: 'POST',
+            data: { phone: phone },
+            dataType: 'json',
+            success: function(res) {
+                console.log('发送验证码响应:', res);
+                if (res.code === 200) {
+                    // 显示验证码（开发测试用）
+                    showMessage('验证码已发送，测试验证码：' + res.data, 'success');
+
+                    // 开始倒计时
+                    countdown = 60;
+                    btn.text(countdown + '秒后重试');
+                    timer = setInterval(function() {
+                        countdown--;
+                        if (countdown <= 0) {
+                            clearInterval(timer);
+                            btn.text('获取验证码');
+                            btn.prop('disabled', false);
+                        } else {
+                            btn.text(countdown + '秒后重试');
+                        }
+                    }, 1000);
+                } else {
+                    showMessage(res.message || '发送失败，请重试', 'error');
+                    btn.text('获取验证码');
+                    btn.prop('disabled', false);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('发送验证码错误:', error);
+                showMessage('网络错误，请检查网络连接', 'error');
+                btn.text('获取验证码');
+                btn.prop('disabled', false);
+            }
+        });
+    });
+
+    // 注册表单提交
+    $('#registerForm').submit(function(e) {
+        e.preventDefault();
+
+        var phone = $('#phone').val();
+        var verifyCode = $('#verifyCode').val();
+        var nickname = $('#nickname').val();
+        var password = $('#password').val();
+        var confirmPassword = $('#confirmPassword').val();
+
+        // 验证
+        if (!phone) {
+            showMessage('请输入手机号', 'error');
+            return;
+        }
+        if (!/^1[3-9]\d{9}$/.test(phone)) {
+            showMessage('请输入正确的手机号', 'error');
+            return;
+        }
+        if (!verifyCode) {
+            showMessage('请输入验证码', 'error');
+            return;
+        }
+        if (!nickname) {
+            showMessage('请输入昵称', 'error');
+            return;
+        }
+        if (!password) {
+            showMessage('请输入密码', 'error');
+            return;
+        }
+        if (password.length < 6) {
+            showMessage('密码长度不能少于6位', 'error');
+            return;
+        }
+        if (password !== confirmPassword) {
+            showMessage('两次输入的密码不一致', 'error');
+            return;
+        }
+
+        // 提交注册
+        $.ajax({
+            url: '/user/register',
+            type: 'POST',
+            data: {
+                phone: phone,
+                nickname: nickname,
+                password: password,
+                verifyCode: verifyCode
+            },
+            dataType: 'json',
+            success: function(res) {
+                console.log('注册响应:', res);
+                if (res.code === 200) {
+                    showMessage('注册成功！正在跳转到登录页...', 'success');
+                    setTimeout(function() {
+                        window.location.href = '/login';
+                    }, 2000);
+                } else {
+                    showMessage(res.message || '注册失败，请重试', 'error');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('注册错误:', error);
+                showMessage('网络错误，请重试', 'error');
+            }
+        });
+    });
+</script>
+</body>
+</html>

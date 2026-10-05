@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>爱心捐款 - 流浪猫救助管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background-color: #f5f5f5;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .header .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .logo a {
+            color: white;
+            text-decoration: none;
+        }
+
+        .nav {
+            display: flex;
+            gap: 30px;
+        }
+
+        .nav a {
+            color: white;
+            text-decoration: none;
+        }
+
+        .user-info a {
+            color: white;
+            text-decoration: none;
+            margin-left: 15px;
+        }
+
+        .main {
+            min-height: calc(100vh - 200px);
+            padding: 40px 0;
+        }
+
+        .footer {
+            background-color: #333;
+            color: #999;
+            text-align: center;
+            padding: 30px 0;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .amount-btns {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+
+        .amount-btn {
+            padding: 8px 15px;
+            background-color: #f0f0f0;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .amount-btn:hover {
+            background-color: #667eea;
+            color: white;
+        }
+
+        .message {
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+            display: none;
+        }
+
+        .message-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <div class="container">
+        <div class="logo">
+            <a href="/">🐱 流浪猫救助管理系统</a>
+        </div>
+        <div class="nav">
+            <a href="/">首页</a>
+            <a href="/cat/list">猫咪列表</a>
+            <a href="/news/list">救助资讯</a>
+            <a href="/clue/submit">提交线索</a>
+            <a href="/donation/donate">爱心捐款</a>
+        </div>
+        <div class="user-info" th:if="${session.user != null}">
+            <span>欢迎，<span th:text="${session.user.nickname}"></span></span>
+            <a href="/user/profile">个人中心</a>
+            <a href="/user/logout">退出</a>
+        </div>
+        <div class="user-info" th:unless="${session.user != null}">
+            <a href="/login">登录</a>
+            <a href="/register">注册</a>
+        </div>
+    </div>
+</div>
+
+<div class="main">
+    <div class="container">
+        <div style="display: flex; gap: 30px; flex-wrap: wrap;">
+            <div class="card" style="flex: 1;">
+                <h2 style="margin-bottom: 20px;">爱心捐款</h2>
+
+                <div id="messageBox" class="message"></div>
+
+                <form id="donateForm">
+                    <div class="form-group">
+                        <label>捐款项目</label>
+                        <select id="targetType" class="form-control">
+                            <option value="0">通用救助基金</option>
+                            <option value="1">猫咪医疗基金</option>
+                            <option value="2">猫咪口粮基金</option>
+                            <option value="3">定向资助猫咪</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="catSelectGroup" style="display: none;">
+                        <label>选择猫咪</label>
+                        <select id="targetId" class="form-control">
+                            <option value="">请选择猫咪</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>捐款金额</label>
+                        <div class="amount-btns">
+                            <button type="button" class="amount-btn" onclick="setAmount(10)">¥10</button>
+                            <button type="button" class="amount-btn" onclick="setAmount(50)">¥50</button>
+                            <button type="button" class="amount-btn" onclick="setAmount(100)">¥100</button>
+                            <button type="button" class="amount-btn" onclick="setAmount(200)">¥200</button>
+                            <button type="button" class="amount-btn" onclick="setAmount(500)">¥500</button>
+                        </div>
+                        <input type="number" id="amount" class="form-control" placeholder="自定义金额" step="0.01" min="0.01" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>捐款类型</label>
+                        <select id="donationType" class="form-control">
+                            <option value="0">单次捐款</option>
+                            <option value="1">月度定期捐款</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>留言（可选）</label>
+                        <textarea id="message" class="form-control" rows="3" placeholder="写下您的祝福..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 10px;">
+                            <input type="checkbox" id="isAnonymous">
+                            匿名捐款
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">立即捐款</button>
+                </form>
+            </div>
+
+            <div class="card" style="width: 300px;">
+                <h3>善款去向说明</h3>
+                <ul style="margin-top: 15px; line-height: 1.8;">
+                    <li>🐱 猫咪医疗救治</li>
+                    <li>🍖 猫咪日常口粮</li>
+                    <li>🏠 救助站运营维护</li>
+                    <li>💉 疫苗绝育项目</li>
+                </ul>
+                <hr style="margin: 15px 0;">
+                <p style="color: #999; font-size: 12px;">所有善款使用情况将定期公示，接受社会监督</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="footer">
+    <div class="container">
+        <p>© 2024 流浪猫救助管理系统 | 用爱心温暖每一个生命</p>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    function showMessage(msg, type) {
+        var messageBox = $('#messageBox');
+        messageBox.removeClass('message-success message-error');
+        messageBox.addClass(type === 'success' ? 'message-success' : 'message-error');
+        messageBox.text(msg);
+        messageBox.show();
+
+        setTimeout(function() {
+            messageBox.fadeOut();
+        }, 3000);
+    }
+
+    function setAmount(amount) {
+        $('#amount').val(amount);
+    }
+
+    // 加载猫咪列表
+    $.get('/cat/list/json', function(res) {
+        if (res.code === 200 && res.data && res.data.length > 0) {
+            var html = '<option value="">请选择猫咪</option>';
+            for (var i = 0; i < res.data.length; i++) {
+                html += '<option value="' + res.data[i].id + '">' + res.data[i].name + ' (' + res.data[i].catNo + ')</option>';
+            }
+            $('#targetId').html(html);
+        } else {
+            $('#targetId').html('<option value="">暂无猫咪</option>');
+        }
+    }).fail(function() {
+        console.log('加载猫咪列表失败');
+        $('#targetId').html('<option value="">加载失败</option>');
+    });
+
+    $('#targetType').change(function() {
+        if ($(this).val() == '3') {
+            $('#catSelectGroup').show();
+        } else {
+            $('#catSelectGroup').hide();
+        }
+    });
+
+    $('#donateForm').submit(function(e) {
+        e.preventDefault();
+
+        var amount = $('#amount').val();
+        if (!amount || parseFloat(amount) <= 0) {
+            showMessage('请输入有效的捐款金额', 'error');
+            return;
+        }
+
+        // 获取 targetId，如果是空字符串则设为 null
+        var targetId = $('#targetId').val();
+        if (targetId === '' || targetId === null) {
+            targetId = null;
+        }
+
+        var formData = {
+            targetType: $('#targetType').val(),
+            targetId: targetId,
+            amount: amount,
+            type: $('#donationType').val(),
+            message: $('#message').val(),
+            isAnonymous: $('#isAnonymous').is(':checked') ? 1 : 0
+        };
+
+        console.log('提交数据:', formData);
+
+        $.ajax({
+            url: '/donation/create',
+            type: 'POST',
+            data: formData,
+            xhrFields: { withCredentials: true },
+            success: function(res) {
+                console.log('响应:', res);
+                if (res.code === 200) {
+                    showMessage('捐款成功！感谢您的爱心！', 'success');
+                    $('#donateForm')[0].reset();
+                    setTimeout(function() {
+                        window.location.href = '/donation/records';
+                    }, 2000);
+                } else {
+                    showMessage(res.message || '捐款失败，请重试', 'error');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('错误:', error);
+                console.error('状态:', status);
+                console.error('响应:', xhr.responseText);
+                showMessage('网络错误，请重试', 'error');
+            }
+        });
+    });
+</script>
+</body>
+</html>

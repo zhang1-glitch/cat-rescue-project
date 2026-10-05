@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${cat.name} + ' - 猫咪详情'">猫咪详情 - 流浪猫救助管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background-color: #f5f5f5;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .header .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .logo a {
+            color: white;
+            text-decoration: none;
+        }
+
+        .nav {
+            display: flex;
+            gap: 30px;
+        }
+
+        .nav a {
+            color: white;
+            text-decoration: none;
+        }
+
+        .user-info a {
+            color: white;
+            text-decoration: none;
+            margin-left: 15px;
+        }
+
+        .main {
+            min-height: calc(100vh - 200px);
+            padding: 40px 0;
+        }
+
+        .footer {
+            background-color: #333;
+            color: #999;
+            text-align: center;
+            padding: 30px 0;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .info-item {
+            margin: 15px 0;
+        }
+
+        .info-item .label {
+            font-weight: bold;
+            width: 100px;
+            display: inline-block;
+        }
+
+        .carousel {
+            position: relative;
+        }
+
+        .cat-status {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+        }
+
+        .status-available {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .status-adopted {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .status-treating {
+            background-color: #ffc107;
+            color: #333;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            background-color: #667eea;
+            color: white;
+            border-radius: 15px;
+            font-size: 12px;
+            margin: 0 3px;
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <div class="container">
+        <div class="logo">
+            <a href="/">流浪猫救助管理系统</a>
+        </div>
+        <div class="nav">
+            <a href="/">首页</a>
+            <a href="/cat/list">猫咪列表</a>
+            <a href="/news/list">救助资讯</a>
+            <a href="/clue/submit">提交线索</a>
+            <a href="/donation/donate">爱心捐款</a>
+        </div>
+        <div class="user-info" th:if="${session.user != null}">
+            <span>欢迎，<span th:text="${session.user.nickname}"></span></span>
+            <a href="/user/profile">个人中心</a>
+            <a href="/user/logout">退出</a>
+        </div>
+        <div class="user-info" th:unless="${session.user != null}">
+            <a href="/login">登录</a>
+            <a href="/register">注册</a>
+        </div>
+    </div>
+</div>
+
+<div class="main">
+    <div class="container">
+        <div class="card">
+            <div style="display: flex; gap: 30px; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 300px;">
+                    <div class="carousel">
+                        <img th:src="${cat.catImages != null && cat.catImages.size() > 0 ? cat.catImages[0].imageUrl : '/uploads/default-cat.jpg'}"
+                             id="mainImage" style="width: 100%; border-radius: 10px;">
+                        <div style="display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
+                            <img th:each="img : ${cat.catImages}"
+                                 th:src="${img.imageUrl}"
+                                 onclick="changeImage(this.src)"
+                                 style="width: 80px; height: 80px; object-fit: cover; border-radius: 5px; cursor: pointer;">
+                        </div>
+                    </div>
+                </div>
+
+                <div style="flex: 1; min-width: 300px;">
+                    <h1 th:text="${cat.name}">猫咪名字</h1>
+                    <p style="color: #999;">编号：<span th:text="${cat.catNo}"></span></p>
+
+                    <div class="info-item">
+                        <span class="label">性别：</span>
+                        <span th:text="${cat.genderText}"></span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">年龄：</span>
+                        <span th:text="${cat.ageText}"></span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">品种：</span>
+                        <span th:text="${cat.breed != null ? cat.breed : '中华田园猫'}"></span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">毛色：</span>
+                        <span th:text="${cat.color != null ? cat.color : '未知'}"></span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">健康状况：</span>
+                        <span th:text="${cat.healthStatus != null ? cat.healthStatus : '良好'}"></span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">绝育情况：</span>
+                        <span th:text="${cat.isNeutered == 1 ? '已绝育' : '未绝育'}"></span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">疫苗情况：</span>
+                        <span th:text="${cat.isVaccinated == 1 ? '已接种' : '未接种'}"></span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">状态：</span>
+                        <span class="cat-status" th:classappend="${cat.status == 1} ? 'status-available' : (${cat.status == 2} ? 'status-adopted' : 'status-treating')" th:text="${cat.statusText}"></span>
+                    </div>
+
+                    <div style="margin-top: 30px; display: flex; gap: 15px; flex-wrap: wrap;">
+                        <a th:if="${session.user != null and session.user.isAdopter == 1 and cat.status == 1}"
+                           th:href="'/adoption/apply/' + ${cat.id}" class="btn btn-primary">申请领养</a>
+                        <button th:if="${session.user != null and session.user.isDonor == 1}"
+                                class="btn btn-success" onclick="donateCat()">资助这只猫咪</button>
+                        <button th:if="${session.user != null}"
+                                class="btn btn-primary" onclick="favorite()" id="favoriteBtn">❤️ 收藏</button>
+                    </div>
+                    <p th:if="${session.user == null}" style="margin-top: 20px;">
+                        <a href="/login">登录</a>后可以申请领养或资助
+                    </p>
+                </div>
+            </div>
+
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+                <h3>救助故事</h3>
+                <p style="margin-top: 10px; line-height: 1.8;" th:text="${cat.rescueStory != null ? cat.rescueStory : '暂无故事'}"></p>
+                <p style="margin-top: 10px; color: #999;">救助地点：<span th:text="${cat.rescueLocation}"></span></p>
+                <p style="margin-top: 5px; color: #999;">救助时间：<span th:text="${cat.formattedRescueTime}"></span></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="footer">
+    <div class="container">
+        <p>© 2024 流浪猫救助管理系统 | 用爱心温暖每一个生命</p>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    var catId = /*[[${cat.id}]]*/ null;
+    /*]]>*/
+
+    function changeImage(src) {
+        $('#mainImage').attr('src', src);
+    }
+
+    function favorite() {
+        if (!catId) {
+            alert('参数错误');
+            return;
+        }
+        $.ajax({
+            url: '/cat/favorite',
+            type: 'POST',
+            data: { catId: catId },
+            xhrFields: { withCredentials: true },
+            success: function(res) {
+                if (res.code === 200) {
+                    alert('收藏成功');
+                    $('#favoriteBtn').text('❤️ 已收藏').prop('disabled', true);
+                } else {
+                    alert(res.message || '收藏失败');
+                }
+            },
+            error: function() {
+                alert('操作失败，请重试');
+            }
+        });
+    }
+
+    function donateCat() {
+        window.location.href = '/donation/donate?catId=' + catId;
+    }
+</script>
+</body>
+</html>

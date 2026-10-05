@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>用户管理 - 管理后台</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Microsoft YaHei', sans-serif; background-color: #f5f5f5; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 0; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        .header .container { display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 24px; font-weight: bold; }
+        .logo a { color: white; text-decoration: none; }
+        .nav { display: flex; gap: 30px; }
+        .nav a { color: white; text-decoration: none; }
+        .user-info a { color: white; text-decoration: none; margin-left: 15px; }
+        .main { min-height: calc(100vh - 200px); padding: 40px 0; }
+        .footer { background-color: #333; color: #999; text-align: center; padding: 30px 0; }
+        .card { background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding: 20px; margin-bottom: 20px; }
+        .btn { display: inline-block; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; text-decoration: none; font-size: 12px; }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .btn-danger { background-color: #dc3545; color: white; }
+        .btn-success { background-color: #28a745; color: white; }
+        .admin-sidebar { width: 250px; }
+        .admin-sidebar ul { list-style: none; }
+        .admin-sidebar li { padding: 10px 0; }
+        .admin-sidebar a { color: #333; text-decoration: none; display: block; padding: 8px 12px; border-radius: 5px; }
+        .admin-sidebar a:hover, .admin-sidebar .active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .flex { display: flex; gap: 20px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background-color: #f5f5f5; }
+        .form-control { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px; }
+        .pagination { display: flex; justify-content: center; gap: 10px; margin-top: 20px; }
+        .pagination a { padding: 5px 10px; border: 1px solid #ddd; border-radius: 5px; text-decoration: none; color: #333; }
+        .pagination .active { background: #667eea; color: white; border: none; }
+        .badge { display: inline-block; padding: 2px 6px; border-radius: 10px; font-size: 11px; margin-right: 3px; }
+        .badge-adopter { background-color: #28a745; color: white; }
+        .badge-donor { background-color: #ffc107; color: #333; }
+    </style>
+</head>
+<body>
+<div class="header">
+    <div class="container">
+        <div class="logo"><a href="/admin/dashboard">流浪猫救助管理系统 - 管理后台</a></div>
+        <div class="nav"><a href="/">前台首页</a></div>
+        <div class="user-info"><span>欢迎，<span th:text="${session.user.nickname}"></span></span><a href="/user/logout">退出</a></div>
+    </div>
+</div>
+
+<div class="main">
+    <div class="container">
+        <div class="flex">
+            <div class="admin-sidebar">
+                <div class="card">
+                    <h3>管理菜单</h3>
+                    <ul>
+                        <li><a href="/admin/dashboard">数据仪表盘</a></li>
+                        <li><a href="/admin/users" class="active">👥 用户管理</a></li>
+                        <li><a href="/admin/cats">猫咪管理</a></li>
+                        <li><a href="/admin/clues">线索审核</a></li>
+                        <li><a href="/admin/adoptions">领养审核</a></li>
+                        <li><a href="/admin/donations">捐款管理</a></li>
+                        <li><a href="/admin/funds">资金管理</a></li>
+                        <li><a href="/admin/news">资讯管理</a></li>
+                        <li><a href="/admin/auth-applies">认证审核</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div style="flex: 1;">
+                <div class="card">
+                    <h2>用户管理</h2>
+
+                    <div style="display: flex; justify-content: space-between; margin: 20px 0;">
+                        <input type="text" id="searchInput" class="form-control" placeholder="搜索用户名/手机号" style="width: 250px;">
+                        <button class="btn btn-primary" onclick="searchUser()">搜索</button>
+                    </div>
+
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>ID</th><th>头像</th><th>昵称</th><th>手机号</th><th>身份</th><th>状态</th><th>注册时间</th><th>操作</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="user : ${users}">
+                            <td th:text="${user.id}">1</td>
+                            <td><img th:src="${user.avatar != null ? user.avatar : '/uploads/default-avatar.jpg'}" style="width: 40px; height: 40px; border-radius: 50%;"></td>
+                            <td th:text="${user.nickname}">用户名</td>
+                            <td th:text="${user.phone}">138****0000</td>
+                            <td>
+                                <span th:if="${user.isAdopter == 1}" class="badge badge-adopter">领养人</span>
+                                <span th:if="${user.isDonor == 1}" class="badge badge-donor">捐款人</span>
+                            </td>
+                            <td><span th:if="${user.status == 1}" style="color: #28a745;">正常</span><span th:if="${user.status == 0}" style="color: #dc3545;">禁用</span></td>
+                            <td th:text="${user.createTime}"></td>
+                            <td>
+                                <button class="btn btn-primary btn-sm" th:onclick="'toggleStatus(' + ${user.id} + ')'" th:text="${user.status == 1} ? '禁用' : '启用'"></button>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="pagination">
+                        <a th:if="${pageNum > 1}" th:href="'/admin/users?page=' + ${pageNum - 1}">上一页</a>
+                        <span th:each="i : ${#numbers.sequence(1, totalPages)}">
+                            <a th:href="'/admin/users?page=' + ${i}" th:text="${i}" th:classappend="${i == pageNum} ? 'active' : ''"></a>
+                        </span>
+                        <a th:if="${pageNum < totalPages}" th:href="'/admin/users?page=' + ${pageNum + 1}">下一页</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="footer"><div class="container"><p>© 2024 流浪猫救助管理系统 | 用爱心温暖每一个生命</p></div></div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    function toggleStatus(id) {
+        $.post('/admin/user/toggle/' + id, function(res) {
+            if (res.code === 200) { location.reload(); }
+            else { alert(res.message); }
+        });
+    }
+    function searchUser() {
+        var keyword = $('#searchInput').val();
+        window.location.href = '/admin/users?keyword=' + encodeURIComponent(keyword);
+    }
+</script>
+</body>
+</html>

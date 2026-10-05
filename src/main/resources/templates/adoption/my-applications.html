@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>我的领养申请 - 流浪猫救助管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background-color: #f5f5f5;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .header .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .logo a {
+            color: white;
+            text-decoration: none;
+        }
+
+        .nav {
+            display: flex;
+            gap: 30px;
+        }
+
+        .nav a {
+            color: white;
+            text-decoration: none;
+        }
+
+        .user-info a {
+            color: white;
+            text-decoration: none;
+            margin-left: 15px;
+        }
+
+        .main {
+            min-height: calc(100vh - 200px);
+            padding: 40px 0;
+        }
+
+        .footer {
+            background-color: #333;
+            color: #999;
+            text-align: center;
+            padding: 30px 0;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 12px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            background-color: #667eea;
+            color: white;
+            border-radius: 15px;
+            font-size: 12px;
+            margin: 0 3px;
+        }
+
+        ul {
+            list-style: none;
+        }
+
+        ul li {
+            padding: 10px 0;
+        }
+
+        ul li a {
+            color: #333;
+            text-decoration: none;
+        }
+
+        ul li a:hover {
+            color: #667eea;
+        }
+
+        hr {
+            margin: 15px 0;
+            border: none;
+            border-top: 1px solid #eee;
+        }
+
+        .apply-item {
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .apply-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .apply-cat {
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .apply-status {
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+        }
+
+        .status-pending {
+            background-color: #ffc107;
+            color: #333;
+        }
+
+        .status-passed {
+            background-color: #17a2b8;
+            color: white;
+        }
+
+        .status-approved {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .status-rejected {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .status-completed {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .apply-info p {
+            margin: 8px 0;
+            font-size: 14px;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 50px;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <div class="container">
+        <div class="logo">
+            <a href="/">🐱 流浪猫救助管理系统</a>
+        </div>
+        <div class="nav">
+            <a href="/">首页</a>
+            <a href="/cat/list">猫咪列表</a>
+            <a href="/news/list">救助资讯</a>
+            <a href="/clue/submit">提交线索</a>
+            <a href="/donation/donate">爱心捐款</a>
+        </div>
+        <div class="user-info" th:if="${session.user != null}">
+            <span>欢迎，<span th:text="${session.user.nickname}"></span></span>
+            <a href="/user/profile">个人中心</a>
+            <a href="/user/logout">退出</a>
+        </div>
+        <div class="user-info" th:unless="${session.user != null}">
+            <a href="/login">登录</a>
+            <a href="/register">注册</a>
+        </div>
+    </div>
+</div>
+
+<div class="main">
+    <div class="container">
+        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+            <div style="width: 250px;">
+                <div class="card">
+                    <div style="text-align: center;">
+                        <img th:src="${session.user.avatar != null ? session.user.avatar : '/uploads/default-avatar.jpg'}"
+                             style="width: 100px; height: 100px; border-radius: 50%; margin-bottom: 15px;">
+                        <h3 th:text="${session.user.nickname}">用户名</h3>
+                        <p>
+                            <span th:if="${session.user.isAdopter == 1}" class="badge">🏠 领养人</span>
+                            <span th:if="${session.user.isDonor == 1}" class="badge">💰 捐款人</span>
+                        </p>
+                    </div>
+                    <hr>
+                    <ul>
+                        <li><a href="/user/profile">个人资料</a></li>
+                        <li><a href="/user/applications">身份认证</a></li>
+                        <li><a href="/adoption/my-applications" style="color: #667eea;">我的领养申请</a></li>
+                        <li><a href="/cat/favorites">我的收藏</a></li>
+                        <li><a href="/donation/records">我的捐款</a></li>
+                        <li><a href="/clue/my-clues">我的线索</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div style="flex: 1;">
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h2>我的领养申请</h2>
+                        <a href="/cat/list" class="btn btn-primary">浏览猫咪</a>
+                    </div>
+
+                    <div th:if="${#lists.isEmpty(applications)}" class="empty">
+                        <p>暂无领养申请记录</p>
+                        <a href="/cat/list" class="btn btn-primary" style="margin-top: 15px;">去申请领养</a>
+                    </div>
+
+                    <div th:each="apply : ${applications}" class="apply-item">
+                        <div class="apply-header">
+                            <span class="apply-cat">🐱 猫咪：<span th:text="${apply.catName}">猫咪名称</span></span>
+                            <span class="apply-status"
+                                  th:classappend="${apply.status == 0} ? 'status-pending' : (${apply.status == 1} ? 'status-passed' : (${apply.status == 2} ? 'status-passed' : (${apply.status == 3} ? 'status-approved' : (${apply.status == 4} ? 'status-rejected' : 'status-completed'))))"
+                                  th:text="${apply.status == 0 ? '待初审' : (apply.status == 1 ? '初审通过' : (apply.status == 2 ? '待回访' : (apply.status == 3 ? '已通过' : (apply.status == 4 ? '已拒绝' : '已完成'))))}">
+                            </span>
+                        </div>
+                        <div class="apply-info">
+                            <p><strong>申请编号：</strong> <span th:text="${apply.id}">1</span></p>
+                            <p><strong>申请类型：</strong> <span th:text="${apply.applyType == 0 ? '直接领养' : '寄养领养'}">直接领养</span></p>
+                            <p><strong>居住类型：</strong> <span th:text="${apply.housingType}">自有住房</span></p>
+                            <p><strong>养宠经验：</strong> <span th:text="${apply.hasExperience == 1 ? '有经验' : '无经验'}">有经验</span></p>
+                            <p><strong>申请时间：</strong> <span th:text="${apply.createTime}">2024-01-01 12:00</span></p>
+                            <p th:if="${apply.rejectReason}" style="color: #dc3545;"><strong>拒绝原因：</strong> <span th:text="${apply.rejectReason}"></span></p>
+                        </div>
+                        <a th:href="'/adoption/progress/' + ${apply.id}" class="btn btn-primary" style="margin-top: 10px;">查看进度</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="footer">
+    <div class="container">
+        <p>© 2024 流浪猫救助管理系统 | 用爱心温暖每一个生命</p>
+    </div>
+</div>
+</body>
+</html>

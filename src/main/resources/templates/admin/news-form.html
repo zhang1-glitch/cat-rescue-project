@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:if="${news == null}">发布资讯 - 管理后台</title>
+    <title th:if="${news != null}">编辑资讯 - 管理后台</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Microsoft YaHei', sans-serif; background-color: #f5f5f5; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 0; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        .header .container { display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 24px; font-weight: bold; }
+        .logo a { color: white; text-decoration: none; }
+        .nav { display: flex; gap: 30px; }
+        .nav a { color: white; text-decoration: none; }
+        .user-info a { color: white; text-decoration: none; margin-left: 15px; }
+        .main { min-height: calc(100vh - 200px); padding: 40px 0; }
+        .footer { background-color: #333; color: #999; text-align: center; padding: 30px 0; }
+        .card { background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding: 20px; margin-bottom: 20px; }
+        .btn { display: inline-block; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; text-decoration: none; }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .btn-secondary { background-color: #6c757d; color: white; }
+        .admin-sidebar { width: 250px; }
+        .admin-sidebar ul { list-style: none; }
+        .admin-sidebar li { padding: 10px 0; }
+        .admin-sidebar a { color: #333; text-decoration: none; display: block; padding: 8px 12px; border-radius: 5px; }
+        .admin-sidebar a:hover, .admin-sidebar .active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .flex { display: flex; gap: 20px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: bold; }
+        .form-control { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; }
+        textarea.form-control { resize: vertical; min-height: 300px; }
+        .form-actions { display: flex; gap: 15px; margin-top: 30px; }
+        .message {
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+            display: none;
+        }
+        .message-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .message-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <div class="container">
+        <div class="logo"><a href="/admin/dashboard">流浪猫救助管理系统 - 管理后台</a></div>
+        <div class="nav"><a href="/">前台首页</a></div>
+        <div class="user-info"><span>欢迎，<span th:text="${session.user.nickname}"></span></span><a href="/user/logout">退出</a></div>
+    </div>
+</div>
+
+<div class="main">
+    <div class="container">
+        <div class="flex">
+            <div class="admin-sidebar">
+                <div class="card">
+                    <h3>管理菜单</h3>
+                    <ul>
+                        <li><a href="/admin/dashboard">数据仪表盘</a></li>
+                        <li><a href="/admin/users">用户管理</a></li>
+                        <li><a href="/admin/cats">猫咪管理</a></li>
+                        <li><a href="/admin/clues">线索审核</a></li>
+                        <li><a href="/admin/adoptions">领养审核</a></li>
+                        <li><a href="/admin/donations">捐款管理</a></li>
+                        <li><a href="/admin/funds">资金管理</a></li>
+                        <li><a href="/admin/news" class="active">资讯管理</a></li>
+                        <li><a href="/admin/auth-applies">认证审核</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div style="flex: 1;">
+                <div class="card">
+                    <h2 th:if="${news == null}">发布新资讯</h2>
+                    <h2 th:if="${news != null}">编辑资讯</h2>
+                    <p style="color: #999; margin-top: 5px;">发布救助动态、科普文章或活动通知</p>
+
+                    <div id="messageBox" class="message"></div>
+
+                    <form id="newsForm">
+                        <input type="hidden" id="newsId" th:value="${news != null ? news.id : null}">
+
+                        <div class="form-group">
+                            <label>标题 *</label>
+                            <input type="text" id="title" class="form-control" th:value="${news != null ? news.title : ''}" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>资讯类型 *</label>
+                            <select id="type" class="form-control" required>
+                                <option value="0" th:selected="${news != null and news.type == 0}">救助动态</option>
+                                <option value="1" th:selected="${news != null and news.type == 1}">科普文章</option>
+                                <option value="2" th:selected="${news != null and news.type == 2}">活动通知</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>封面图片URL</label>
+                            <input type="text" id="coverImage" class="form-control" th:value="${news != null ? news.coverImage : ''}" placeholder="请输入图片地址（可选）">
+                        </div>
+
+                        <div class="form-group">
+                            <label>内容 *</label>
+                            <textarea id="content" class="form-control" rows="15" required th:text="${news != null ? news.content : ''}"></textarea>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">保存</button>
+                            <a href="/admin/news" class="btn btn-secondary">返回</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="footer"><div class="container"><p>© 2024 流浪猫救助管理系统 | 用爱心温暖每一个生命</p></div></div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    function showMessage(msg, type) {
+        var messageBox = $('#messageBox');
+        messageBox.removeClass('message-success message-error');
+        messageBox.addClass(type === 'success' ? 'message-success' : 'message-error');
+        messageBox.text(msg);
+        messageBox.show();
+
+        setTimeout(function() {
+            messageBox.fadeOut();
+        }, 3000);
+    }
+
+    $('#newsForm').submit(function(e) {
+        e.preventDefault();
+
+        var title = $('#title').val();
+        var content = $('#content').val();
+
+        if (!title) {
+            showMessage('请填写标题', 'error');
+            return;
+        }
+        if (!content) {
+            showMessage('请填写内容', 'error');
+            return;
+        }
+
+        var formData = {
+            id: $('#newsId').val(),
+            title: title,
+            type: $('#type').val(),
+            coverImage: $('#coverImage').val(),
+            content: content,
+            status: 0  // 草稿状态
+        };
+
+        $.ajax({
+            url: '/admin/news/save',
+            type: 'POST',
+            data: formData,
+            success: function(res) {
+                if (res.code === 200) {
+                    showMessage('保存成功！', 'success');
+                    setTimeout(function() {
+                        window.location.href = '/admin/news';
+                    }, 1500);
+                } else {
+                    showMessage(res.message || '保存失败', 'error');
+                }
+            },
+            error: function() {
+                showMessage('网络错误，请重试', 'error');
+            }
+        });
+    });
+</script>
+</body>
+</html>

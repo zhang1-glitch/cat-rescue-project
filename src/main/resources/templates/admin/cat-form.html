@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:if="${cat == null}">添加猫咪 - 管理后台</title>
+    <title th:if="${cat != null}">编辑猫咪 - 管理后台</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Microsoft YaHei', sans-serif; background-color: #f5f5f5; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 0; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        .header .container { display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 24px; font-weight: bold; }
+        .logo a { color: white; text-decoration: none; }
+        .nav { display: flex; gap: 30px; }
+        .nav a { color: white; text-decoration: none; }
+        .user-info a { color: white; text-decoration: none; margin-left: 15px; }
+        .main { min-height: calc(100vh - 200px); padding: 40px 0; }
+        .footer { background-color: #333; color: #999; text-align: center; padding: 30px 0; }
+        .card { background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding: 20px; margin-bottom: 20px; }
+        .btn { display: inline-block; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; text-decoration: none; }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .btn-secondary { background-color: #6c757d; color: white; }
+        .admin-sidebar { width: 250px; }
+        .admin-sidebar ul { list-style: none; }
+        .admin-sidebar li { padding: 10px 0; }
+        .admin-sidebar a { color: #333; text-decoration: none; display: block; padding: 8px 12px; border-radius: 5px; }
+        .admin-sidebar a:hover, .admin-sidebar .active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .flex { display: flex; gap: 20px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: bold; }
+        .form-control { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; }
+        textarea.form-control { resize: vertical; min-height: 100px; }
+        .image-preview { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+        .image-preview img { width: 100px; height: 100px; object-fit: cover; border-radius: 5px; border: 1px solid #ddd; }
+        .form-actions { display: flex; gap: 15px; margin-top: 30px; }
+    </style>
+</head>
+<body>
+<div class="header">
+    <div class="container">
+        <div class="logo"><a href="/admin/dashboard">🐱 流浪猫救助管理系统 - 管理后台</a></div>
+        <div class="nav"><a href="/">前台首页</a></div>
+        <div class="user-info"><span>欢迎，<span th:text="${session.user.nickname}"></span></span><a href="/user/logout">退出</a></div>
+    </div>
+</div>
+
+<div class="main">
+    <div class="container">
+        <div class="flex">
+            <div class="admin-sidebar">
+                <div class="card">
+                    <h3>管理菜单</h3>
+                    <ul>
+                        <li><a href="/admin/dashboard">📊 数据仪表盘</a></li>
+                        <li><a href="/admin/users">👥 用户管理</a></li>
+                        <li><a href="/admin/cats" class="active">🐱 猫咪管理</a></li>
+                        <li><a href="/admin/clues">📍 线索审核</a></li>
+                        <li><a href="/admin/adoptions">📋 领养审核</a></li>
+                        <li><a href="/admin/donations">💰 捐款管理</a></li>
+                        <li><a href="/admin/funds">💵 资金管理</a></li>
+                        <li><a href="/admin/news">📰 资讯管理</a></li>
+                        <li><a href="/admin/auth-applies">✅ 认证审核</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div style="flex: 1;">
+                <div class="card">
+                    <h2 th:if="${cat == null}">添加猫咪</h2>
+                    <h2 th:if="${cat != null}">编辑猫咪</h2>
+
+                    <form id="catForm" enctype="multipart/form-data">
+                        <input type="hidden" id="catId" th:value="${cat != null ? cat.id : null}">
+
+                        <div class="form-group">
+                            <label>猫咪名称 *</label>
+                            <input type="text" id="name" class="form-control" th:value="${cat != null ? cat.name : ''}" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>猫咪编号</label>
+                            <input type="text" id="catNo" class="form-control" th:value="${cat != null ? cat.catNo : ''}" readonly>
+                        </div>
+
+                        <div class="form-group">
+                            <label>性别</label>
+                            <select id="gender" class="form-control">
+                                <option value="0" th:selected="${cat != null and cat.gender == 0}">母猫</option>
+                                <option value="1" th:selected="${cat != null and cat.gender == 1}">公猫</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>年龄（月）</label>
+                            <input type="number" id="age" class="form-control" th:value="${cat != null ? cat.age : ''}">
+                        </div>
+
+                        <div class="form-group">
+                            <label>品种</label>
+                            <input type="text" id="breed" class="form-control" th:value="${cat != null ? cat.breed : '中华田园猫'}">
+                        </div>
+
+                        <div class="form-group">
+                            <label>毛色</label>
+                            <input type="text" id="color" class="form-control" th:value="${cat != null ? cat.color : ''}">
+                        </div>
+
+                        <div class="form-group">
+                            <label>健康状况</label>
+                            <textarea id="healthStatus" class="form-control" rows="2" th:text="${cat != null ? cat.healthStatus : ''}"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label>绝育情况</label>
+                            <select id="isNeutered" class="form-control">
+                                <option value="0" th:selected="${cat != null and cat.isNeutered == 0}">未绝育</option>
+                                <option value="1" th:selected="${cat != null and cat.isNeutered == 1}">已绝育</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>疫苗情况</label>
+                            <select id="isVaccinated" class="form-control">
+                                <option value="0" th:selected="${cat != null and cat.isVaccinated == 0}">未接种</option>
+                                <option value="1" th:selected="${cat != null and cat.isVaccinated == 1}">已接种</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>救助地点</label>
+                            <input type="text" id="rescueLocation" class="form-control" th:value="${cat != null ? cat.rescueLocation : ''}">
+                        </div>
+
+                        <!-- 修复日期字段：不使用 #dates.format -->
+                        <div class="form-group">
+                            <label>救助时间</label>
+                            <input type="datetime-local" id="rescueTime" class="form-control" th:value="${cat != null and cat.rescueTime != null ? cat.formattedRescueTimeForInput : ''}">
+                        </div>
+
+                        <div class="form-group">
+                            <label>救助故事</label>
+                            <textarea id="rescueStory" class="form-control" rows="3" th:text="${cat != null ? cat.rescueStory : ''}"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label>猫咪状态</label>
+                            <select id="status" class="form-control">
+                                <option value="0" th:selected="${cat != null and cat.status == 0}">待救助</option>
+                                <option value="1" th:selected="${cat != null and cat.status == 1}">待领养</option>
+                                <option value="2" th:selected="${cat != null and cat.status == 2}">已领养</option>
+                                <option value="3" th:selected="${cat != null and cat.status == 3}">寄养中</option>
+                                <option value="4" th:selected="${cat != null and cat.status == 4}">治疗中</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>猫咪图片</label>
+                            <input type="file" id="images" class="form-control" multiple accept="image/*">
+                            <p style="color: #999; font-size: 12px;">可上传多张图片，第一张将作为封面</p>
+                        </div>
+
+                        <div id="imagePreview" class="image-preview">
+                            <img th:each="img : ${cat.catImages}" th:src="${img.imageUrl}" alt="猫咪图片">
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">保存</button>
+                            <a href="/admin/cats" class="btn btn-secondary">返回</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="footer"><div class="container"><p>© 2024 流浪猫救助管理系统 | 爱心温暖每一个生命</p></div></div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $('#images').change(function(e) {
+        var files = e.target.files;
+        $('#imagePreview').empty();
+        for (var i = 0; i < files.length && i < 9; i++) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                $('#imagePreview').append('<img src="' + e.target.result + '" style="width: 100px; height: 100px; object-fit: cover;">');
+            }
+            reader.readAsDataURL(files[i]);
+        }
+    });
+
+    $('#catForm').submit(function(e) {
+        e.preventDefault();
+
+        var formData = new FormData();
+        formData.append('id', $('#catId').val());
+        formData.append('name', $('#name').val());
+        formData.append('catNo', $('#catNo').val());
+        formData.append('gender', $('#gender').val());
+        formData.append('age', $('#age').val());
+        formData.append('breed', $('#breed').val());
+        formData.append('color', $('#color').val());
+        formData.append('healthStatus', $('#healthStatus').val());
+        formData.append('isNeutered', $('#isNeutered').val());
+        formData.append('isVaccinated', $('#isVaccinated').val());
+        formData.append('rescueLocation', $('#rescueLocation').val());
+        formData.append('rescueTime', $('#rescueTime').val());
+        formData.append('rescueStory', $('#rescueStory').val());
+        formData.append('status', $('#status').val());
+
+        var files = $('#images')[0].files;
+        for (var i = 0; i < files.length; i++) {
+            formData.append('images', files[i]);
+        }
+
+        $.ajax({
+            url: '/admin/cat/save',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(res) {
+                if (res.code === 200) {
+                    alert('保存成功');
+                    window.location.href = '/admin/cats';
+                } else {
+                    alert(res.message || '保存失败');
+                }
+            },
+            error: function() {
+                alert('保存失败，请重试');
+            }
+        });
+    });
+</script>
+</body>
+</html>

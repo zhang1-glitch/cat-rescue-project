@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>线索详情 - 管理后台</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Microsoft YaHei', sans-serif; background-color: #f5f5f5; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 0; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        .header .container { display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 24px; font-weight: bold; }
+        .logo a { color: white; text-decoration: none; }
+        .nav { display: flex; gap: 30px; }
+        .nav a { color: white; text-decoration: none; }
+        .user-info a { color: white; text-decoration: none; margin-left: 15px; }
+        .main { min-height: calc(100vh - 200px); padding: 40px 0; }
+        .footer { background-color: #333; color: #999; text-align: center; padding: 30px 0; }
+        .card { background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding: 20px; margin-bottom: 20px; }
+        .btn { display: inline-block; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; text-decoration: none; font-size: 12px; }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .btn-success { background-color: #28a745; color: white; }
+        .btn-danger { background-color: #dc3545; color: white; }
+        .btn-warning { background-color: #ffc107; color: #333; }
+        .admin-sidebar { width: 250px; }
+        .admin-sidebar ul { list-style: none; }
+        .admin-sidebar li { padding: 10px 0; }
+        .admin-sidebar a { color: #333; text-decoration: none; display: block; padding: 8px 12px; border-radius: 5px; }
+        .admin-sidebar a:hover, .admin-sidebar .active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .flex { display: flex; gap: 20px; }
+        .info-item { margin: 15px 0; }
+        .info-item .label { font-weight: bold; width: 100px; display: inline-block; }
+        .status-pending { background-color: #ffc107; color: #333; padding: 3px 8px; border-radius: 12px; font-size: 12px; display: inline-block; }
+        .status-approved { background-color: #28a745; color: white; padding: 3px 8px; border-radius: 12px; font-size: 12px; display: inline-block; }
+        .status-rejected { background-color: #dc3545; color: white; padding: 3px 8px; border-radius: 12px; font-size: 12px; display: inline-block; }
+        .status-rescued { background-color: #17a2b8; color: white; padding: 3px 8px; border-radius: 12px; font-size: 12px; display: inline-block; }
+        .image-preview { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+        .image-preview img { width: 150px; height: 150px; object-fit: cover; border-radius: 5px; border: 1px solid #ddd; }
+        .section-title { margin: 20px 0 10px; padding-bottom: 10px; border-bottom: 2px solid #667eea; }
+    </style>
+</head>
+<body>
+<div class="header">
+    <div class="container">
+        <div class="logo"><a href="/admin/dashboard">🐱 流浪猫救助管理系统 - 管理后台</a></div>
+        <div class="nav"><a href="/">前台首页</a></div>
+        <div class="user-info"><span>欢迎，<span th:text="${session.user.nickname}"></span></span><a href="/user/logout">退出</a></div>
+    </div>
+</div>
+
+<div class="main">
+    <div class="container">
+        <div class="flex">
+            <div class="admin-sidebar">
+                <div class="card">
+                    <h3>管理菜单</h3>
+                    <ul>
+                        <li><a href="/admin/dashboard">📊 数据仪表盘</a></li>
+                        <li><a href="/admin/users">👥 用户管理</a></li>
+                        <li><a href="/admin/cats">🐱 猫咪管理</a></li>
+                        <li><a href="/admin/clues" class="active">📍 线索审核</a></li>
+                        <li><a href="/admin/adoptions">📋 领养审核</a></li>
+                        <li><a href="/admin/donations">💰 捐款管理</a></li>
+                        <li><a href="/admin/funds">💵 资金管理</a></li>
+                        <li><a href="/admin/news">📰 资讯管理</a></li>
+                        <li><a href="/admin/auth-applies">✅ 认证审核</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div style="flex: 1;">
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h2>线索详情</h2>
+                        <a href="/admin/clues" class="btn btn-primary">返回列表</a>
+                    </div>
+
+                    <!-- 状态标签 -->
+                    <div style="margin-bottom: 20px;">
+                        <span class="status-pending" th:if="${clue.status == 0}">待审核</span>
+                        <span class="status-approved" th:if="${clue.status == 1}">已采纳</span>
+                        <span class="status-rejected" th:if="${clue.status == 2}">已拒绝</span>
+                        <span class="status-rescued" th:if="${clue.status == 3}">已救助</span>
+                    </div>
+
+                    <!-- 基本信息 -->
+                    <h3 class="section-title">基本信息</h3>
+                    <div class="info-item"><span class="label">线索编号：</span><span th:text="${clue.id}">1</span></div>
+                    <div class="info-item"><span class="label">提交用户：</span><span th:text="${clue.userName}">用户名</span></div>
+                    <div class="info-item"><span class="label">发现位置：</span><span th:text="${clue.location}">位置</span></div>
+                    <div class="info-item"><span class="label">猫咪数量：</span><span th:text="${clue.catCount}">1只</span></div>
+                    <div class="info-item"><span class="label">提交时间：</span><span th:text="${clue.createTime}">时间</span></div>
+                    <div class="info-item"><span class="label">联系方式：</span><span th:text="${clue.contact}">联系方式</span></div>
+
+                    <!-- 猫咪状况 -->
+                    <h3 class="section-title">猫咪状况</h3>
+                    <div class="info-item"><span class="label">健康状况：</span><span th:text="${clue.healthDesc}">描述</span></div>
+                    <div class="info-item"><span class="label">补充说明：</span><span th:text="${clue.supplement}">补充</span></div>
+
+                    <!-- 拒绝原因 -->
+                    <div th:if="${clue.status == 2 and clue.rejectReason}">
+                        <h3 class="section-title">拒绝原因</h3>
+                        <div class="info-item" style="color: #dc3545;"><span class="label">拒绝原因：</span><span th:text="${clue.rejectReason}"></span></div>
+                    </div>
+
+                    <!-- 图片 -->
+                    <h3 class="section-title">图片附件</h3>
+                    <div class="image-preview" id="imagePreview">
+                        <img th:each="img : ${clue.images}" th:src="${img.imageUrl}" alt="线索图片">
+                    </div>
+                    <div th:if="${clue.images == null or clue.images.isEmpty()}" style="color: #999; padding: 20px; text-align: center;">
+                        暂无图片
+                    </div>
+
+                    <!-- 操作按钮 -->
+                    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+                        <div th:if="${clue.status == 0}">
+                            <button class="btn btn-success" th:onclick="'approveClue(' + ${clue.id} + ')'">✅ 采纳</button>
+                            <button class="btn btn-danger" th:onclick="'rejectClue(' + ${clue.id} + ')'">❌ 拒绝</button>
+                        </div>
+                        <div th:if="${clue.status == 1}">
+                            <span style="color: #28a745;">该线索已被采纳，已转为猫咪档案</span>
+                        </div>
+                        <div th:if="${clue.status == 2}">
+                            <span style="color: #dc3545;">该线索已被拒绝</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="footer"><div class="container"><p>© 2024 流浪猫救助管理系统 | 用爱心温暖每一个生命</p></div></div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    function approveClue(id) {
+        if (confirm('确定采纳这条线索并转为猫咪档案吗？')) {
+            $.post('/admin/clue/adopt/' + id, function(res) {
+                if (res.code === 200) {
+                    alert('已转为猫咪档案');
+                    location.reload();
+                } else {
+                    alert(res.message || '操作失败');
+                }
+            });
+        }
+    }
+
+    function rejectClue(id) {
+        var reason = prompt('请输入拒绝原因：');
+        if (reason !== null && reason.trim() !== '') {
+            $.post('/admin/clue/review/' + id, { status: 2, rejectReason: reason }, function(res) {
+                if (res.code === 200) {
+                    alert('已拒绝');
+                    location.reload();
+                } else {
+                    alert(res.message || '操作失败');
+                }
+            });
+        } else if (reason !== null) {
+            alert('请填写拒绝原因');
+        }
+    }
+</script>
+</body>
+</html>

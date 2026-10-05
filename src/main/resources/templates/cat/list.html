@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>猫咪列表 - 流浪猫救助管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background-color: #f5f5f5;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .header .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .logo a {
+            color: white;
+            text-decoration: none;
+        }
+
+        .nav {
+            display: flex;
+            gap: 30px;
+        }
+
+        .nav a {
+            color: white;
+            text-decoration: none;
+        }
+
+        .user-info a {
+            color: white;
+            text-decoration: none;
+            margin-left: 15px;
+        }
+
+        .main {
+            min-height: calc(100vh - 200px);
+            padding: 40px 0;
+        }
+
+        .footer {
+            background-color: #333;
+            color: #999;
+            text-align: center;
+            padding: 30px 0;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .cat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .cat-card {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+
+        .cat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .cat-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .cat-card-info {
+            padding: 15px;
+        }
+
+        .cat-card-info h3 {
+            margin-bottom: 10px;
+        }
+
+        .cat-status {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+
+        .status-available {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .status-adopted {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .status-treating {
+            background-color: #ffc107;
+            color: #333;
+        }
+
+        .filter-group {
+            margin-bottom: 15px;
+        }
+
+        .filter-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 30px;
+        }
+
+        .pagination a {
+            padding: 8px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            text-decoration: none;
+            color: #333;
+        }
+
+        .pagination .active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <div class="container">
+        <div class="logo">
+            <a href="/">流浪猫救助管理系统</a>
+        </div>
+        <div class="nav">
+            <a href="/">首页</a>
+            <a href="/cat/list">猫咪列表</a>
+            <a href="/news/list">救助资讯</a>
+            <a href="/clue/submit">提交线索</a>
+            <a href="/donation/donate">爱心捐款</a>
+        </div>
+        <div class="user-info" th:if="${session.user != null}">
+            <span>欢迎，<span th:text="${session.user.nickname}"></span></span>
+            <a href="/user/profile">个人中心</a>
+            <a href="/user/logout">退出</a>
+        </div>
+        <div class="user-info" th:unless="${session.user != null}">
+            <a href="/login">登录</a>
+            <a href="/register">注册</a>
+        </div>
+    </div>
+</div>
+
+<div class="main">
+    <div class="container">
+        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+            <div style="width: 250px;">
+                <div class="card">
+                    <h3>筛选条件</h3>
+                    <div class="filter-group">
+                        <label>猫咪状态</label>
+                        <select id="filterStatus" class="form-control">
+                            <option value="">全部</option>
+                            <option value="0">待救助</option>
+                            <option value="1">待领养</option>
+                            <option value="2">已领养</option>
+                            <option value="3">寄养中</option>
+                            <option value="4">治疗中</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>性别</label>
+                        <select id="filterGender" class="form-control">
+                            <option value="">全部</option>
+                            <option value="0">母猫</option>
+                            <option value="1">公猫</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" style="width: 100%;" onclick="search()">筛选</button>
+                    <button class="btn" style="width: 100%; margin-top: 10px;" onclick="resetFilter()">重置</button>
+                </div>
+            </div>
+
+            <div style="flex: 1;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2>猫咪列表</h2>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="searchKeyword" class="form-control" placeholder="搜索猫咪名称或编号" style="width: 200px;">
+                        <button class="btn btn-primary" onclick="search()">搜索</button>
+                    </div>
+                </div>
+
+                <div class="cat-grid" id="catList">
+                    <div th:each="cat : ${cats}" class="cat-card">
+                        <img th:src="${cat.catImages != null && cat.catImages.size() > 0 ? cat.catImages[0].imageUrl : '/uploads/default-cat.jpg'}"
+                             th:alt="${cat.name}">
+                        <div class="cat-card-info">
+                            <h3 th:text="${cat.name}">猫咪名字</h3>
+                            <p>编号：<span th:text="${cat.catNo}"></span></p>
+                            <p>年龄：<span th:text="${cat.ageText}"></span></p>
+                            <p>性别：<span th:text="${cat.genderText}"></span></p>
+                            <span class="cat-status"
+                                  th:classappend="${cat.status == 1} ? 'status-available' : (${cat.status == 2} ? 'status-adopted' : 'status-treating')"
+                                  th:text="${cat.statusText}">
+                                </span>
+                            <a th:href="'/cat/detail/' + ${cat.id}" class="btn btn-primary" style="margin-top: 10px; width: 100%;">查看详情</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div th:if="${#lists.isEmpty(cats)}" style="text-align: center; padding: 50px;">
+                    <p>暂无猫咪信息</p>
+                </div>
+
+                <div class="pagination" th:if="${totalPages > 1}">
+                    <a th:if="${pageNum > 1}" th:href="'/cat/list?page=' + ${pageNum - 1} + '&status=' + ${status} + '&keyword=' + ${keyword}">上一页</a>
+                    <span th:each="i : ${#numbers.sequence(1, totalPages)}">
+                            <a th:href="'/cat/list?page=' + ${i} + '&status=' + ${status} + '&keyword=' + ${keyword}"
+                               th:text="${i}" th:classappend="${i == pageNum} ? 'active' : ''"></a>
+                        </span>
+                    <a th:if="${pageNum < totalPages}" th:href="'/cat/list?page=' + ${pageNum + 1} + '&status=' + ${status} + '&keyword=' + ${keyword}">下一页</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="footer">
+    <div class="container">
+        <p>© 2024 流浪猫救助管理系统 | 用爱心温暖每一个生命</p>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    function search() {
+        var keyword = $('#searchKeyword').val();
+        var status = $('#filterStatus').val();
+        var gender = $('#filterGender').val();
+
+        console.log('搜索参数 - 关键字:', keyword, '状态:', status, '性别:', gender);
+
+        var params = [];
+        if (keyword && keyword.trim() !== '') {
+            params.push('keyword=' + encodeURIComponent(keyword.trim()));
+        }
+        if (status && status !== '') {
+            params.push('status=' + status);
+        }
+        if (gender && gender !== '') {
+            params.push('gender=' + gender);
+        }
+
+        var url = '/cat/search';
+        if (params.length > 0) {
+            url += '?' + params.join('&');
+        }
+
+        console.log('跳转URL:', url);
+        window.location.href = url;
+    }
+
+    function resetFilter() {
+        $('#filterStatus').val('');
+        $('#filterGender').val('');
+        $('#searchKeyword').val('');
+        search();
+    }
+
+    $(function() {
+        var params = new URLSearchParams(window.location.search);
+        if (params.get('status')) $('#filterStatus').val(params.get('status'));
+        if (params.get('gender')) $('#filterGender').val(params.get('gender'));
+        if (params.get('keyword')) $('#searchKeyword').val(params.get('keyword'));
+
+        console.log('当前URL参数 - 状态:', params.get('status'), '性别:', params.get('gender'), '关键字:', params.get('keyword'));
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>猫咪管理 - 管理后台</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Microsoft YaHei', sans-serif; background-color: #f5f5f5; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 0; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        .header .container { display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 24px; font-weight: bold; }
+        .logo a { color: white; text-decoration: none; }
+        .nav { display: flex; gap: 30px; }
+        .nav a { color: white; text-decoration: none; }
+        .user-info a { color: white; text-decoration: none; margin-left: 15px; }
+        .main { min-height: calc(100vh - 200px); padding: 40px 0; }
+        .footer { background-color: #333; color: #999; text-align: center; padding: 30px 0; }
+        .card { background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding: 20px; margin-bottom: 20px; }
+        .btn { display: inline-block; padding: 6px 12px; border: none; border-radius: 5px; cursor: pointer; text-decoration: none; font-size: 12px; }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .btn-success { background-color: #28a745; color: white; }
+        .btn-danger { background-color: #dc3545; color: white; }
+        .btn-sm { padding: 4px 8px; font-size: 11px; }
+        .admin-sidebar { width: 250px; }
+        .admin-sidebar ul { list-style: none; }
+        .admin-sidebar li { padding: 10px 0; }
+        .admin-sidebar a { color: #333; text-decoration: none; display: block; padding: 8px 12px; border-radius: 5px; }
+        .admin-sidebar a:hover, .admin-sidebar .active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .flex { display: flex; gap: 20px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background-color: #f5f5f5; }
+        .pagination { display: flex; justify-content: center; gap: 10px; margin-top: 20px; }
+        .pagination a { padding: 5px 10px; border: 1px solid #ddd; border-radius: 5px; text-decoration: none; color: #333; }
+        .pagination .active { background: #667eea; color: white; border: none; }
+        .status { padding: 3px 8px; border-radius: 12px; font-size: 12px; display: inline-block; }
+        .status-0 { background-color: #ffc107; color: #333; }
+        .status-1 { background-color: #28a745; color: white; }
+        .status-2 { background-color: #6c757d; color: white; }
+        .status-3 { background-color: #17a2b8; color: white; }
+        .status-4 { background-color: #fd7e14; color: white; }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+<div class="header">
+    <div class="container">
+        <div class="logo"><a href="/admin/dashboard">🐱 流浪猫救助管理系统 - 管理后台</a></div>
+        <div class="nav"><a href="/">前台首页</a></div>
+        <div class="user-info"><span>欢迎，<span th:text="${session.user.nickname}"></span></span><a href="/user/logout">退出</a></div>
+    </div>
+</div>
+
+<div class="main">
+    <div class="container">
+        <div class="flex">
+            <div class="admin-sidebar">
+                <div class="card">
+                    <h3>管理菜单</h3>
+                    <ul>
+                        <li><a href="/admin/dashboard">📊 数据仪表盘</a></li>
+                        <li><a href="/admin/users">👥 用户管理</a></li>
+                        <li><a href="/admin/cats" class="active">🐱 猫咪管理</a></li>
+                        <li><a href="/admin/clues">📍 线索审核</a></li>
+                        <li><a href="/admin/adoptions">📋 领养审核</a></li>
+                        <li><a href="/admin/donations">💰 捐款管理</a></li>
+                        <li><a href="/admin/funds">💵 资金管理</a></li>
+                        <li><a href="/admin/news">📰 资讯管理</a></li>
+                        <li><a href="/admin/auth-applies">✅ 认证审核</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div style="flex: 1;">
+                <div class="card">
+                    <div class="top-bar">
+                        <h2>猫咪管理</h2>
+                        <a href="/admin/cat/add" class="btn btn-primary">+ 添加猫咪</a>
+                    </div>
+
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>编号</th>
+                            <th>名字</th>
+                            <th>性别</th>
+                            <th>年龄</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </thead>
+                        </thead>
+                        <tbody>
+                        <tr th:each="cat : ${cats}">
+                            <td th:text="${cat.id}">1</td>
+                            <td th:text="${cat.catNo}">CAT001</td>
+                            <td th:text="${cat.name}">小花</td>
+                            <td th:text="${cat.gender == 1 ? '公' : '母'}">母</td>
+                            <td th:text="${cat.age} + '个月'">8个月</td>
+                            <td>
+                                <span class="status status-0" th:if="${cat.status == 0}" th:text="待救助"></span>
+                                <span class="status status-1" th:if="${cat.status == 1}" th:text="待领养"></span>
+                                <span class="status status-2" th:if="${cat.status == 2}" th:text="已领养"></span>
+                                <span class="status status-3" th:if="${cat.status == 3}" th:text="寄养中"></span>
+                                <span class="status status-4" th:if="${cat.status == 4}" th:text="治疗中"></span>
+                            </td>
+                            <td>
+                                <a th:href="'/admin/cat/edit/' + ${cat.id}" class="btn btn-success btn-sm">编辑</a>
+                                <button class="btn btn-danger btn-sm" th:onclick="'deleteCat(' + ${cat.id} + ')'">删除</button>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+
+                    <div th:if="${#lists.isEmpty(cats)}" style="text-align: center; padding: 50px; color: #999;">
+                        <p>暂无猫咪数据</p>
+                        <a href="/admin/cat/add" class="btn btn-primary" style="margin-top: 15px;">添加第一只猫咪</a>
+                    </div>
+
+                    <div class="pagination" th:if="${totalPages > 1}">
+                        <a th:if="${pageNum > 1}" th:href="'/admin/cats?page=' + ${pageNum - 1}">上一页</a>
+                        <span th:each="i : ${#numbers.sequence(1, totalPages)}">
+                            <a th:href="'/admin/cats?page=' + ${i}" th:text="${i}" th:classappend="${i == pageNum} ? 'active' : ''"></a>
+                        </span>
+                        <a th:if="${pageNum < totalPages}" th:href="'/admin/cats?page=' + ${pageNum + 1}">下一页</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="footer"><div class="container"><p>© 2024 流浪猫救助管理系统 | 用爱心温暖每一个生命</p></div></div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    function deleteCat(id) {
+        if (confirm('确定要删除这只猫咪吗？')) {
+            $.post('/admin/cat/delete/' + id, function(res) {
+                if (res.code === 200) {
+                    alert('删除成功');
+                    location.reload();
+                } else {
+                    alert(res.message);
+                }
+            });
+        }
+    }
+</script>
+</body>
+</html>

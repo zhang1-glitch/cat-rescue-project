@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>领养审核 - 管理后台</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Microsoft YaHei', sans-serif; background-color: #f5f5f5; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 0; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        .header .container { display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 24px; font-weight: bold; }
+        .logo a { color: white; text-decoration: none; }
+        .nav { display: flex; gap: 30px; }
+        .nav a { color: white; text-decoration: none; }
+        .user-info a { color: white; text-decoration: none; margin-left: 15px; }
+        .main { min-height: calc(100vh - 200px); padding: 40px 0; }
+        .footer { background-color: #333; color: #999; text-align: center; padding: 30px 0; }
+        .card { background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding: 20px; margin-bottom: 20px; }
+        .btn { display: inline-block; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; text-decoration: none; font-size: 12px; }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .btn-success { background-color: #28a745; color: white; }
+        .btn-danger { background-color: #dc3545; color: white; }
+        .btn-warning { background-color: #ffc107; color: #333; }
+        .admin-sidebar { width: 250px; }
+        .admin-sidebar ul { list-style: none; }
+        .admin-sidebar li { padding: 10px 0; }
+        .admin-sidebar a { color: #333; text-decoration: none; display: block; padding: 8px 12px; border-radius: 5px; }
+        .admin-sidebar a:hover, .admin-sidebar .active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .flex { display: flex; gap: 20px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background-color: #f5f5f5; }
+        .status-pending { background-color: #ffc107; color: #333; padding: 3px 8px; border-radius: 12px; font-size: 12px; display: inline-block; }
+        .status-passed { background-color: #17a2b8; color: white; padding: 3px 8px; border-radius: 12px; font-size: 12px; display: inline-block; }
+        .status-approved { background-color: #28a745; color: white; padding: 3px 8px; border-radius: 12px; font-size: 12px; display: inline-block; }
+        .status-rejected { background-color: #dc3545; color: white; padding: 3px 8px; border-radius: 12px; font-size: 12px; display: inline-block; }
+        .status-completed { background-color: #6c757d; color: white; padding: 3px 8px; border-radius: 12px; font-size: 12px; display: inline-block; }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            width: 500px;
+            max-width: 90%;
+        }
+        .modal-content textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            resize: vertical;
+        }
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .tab-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .tab-btn {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            color: #666;
+        }
+        .tab-btn.active {
+            color: #667eea;
+            border-bottom: 2px solid #667eea;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <div class="container">
+        <div class="logo"><a href="/admin/dashboard">🐱 流浪猫救助管理系统 - 管理后台</a></div>
+        <div class="nav"><a href="/">前台首页</a></div>
+        <div class="user-info"><span>欢迎，<span th:text="${session.user.nickname}"></span></span><a href="/user/logout">退出</a></div>
+    </div>
+</div>
+
+<div class="main">
+    <div class="container">
+        <div class="flex">
+            <div class="admin-sidebar">
+                <div class="card">
+                    <h3>管理菜单</h3>
+                    <ul>
+                        <li><a href="/admin/dashboard">📊 数据仪表盘</a></li>
+                        <li><a href="/admin/users">👥 用户管理</a></li>
+                        <li><a href="/admin/cats">🐱 猫咪管理</a></li>
+                        <li><a href="/admin/clues">📍 线索审核</a></li>
+                        <li><a href="/admin/adoptions" class="active">📋 领养审核</a></li>
+                        <li><a href="/admin/donations">💰 捐款管理</a></li>
+                        <li><a href="/admin/funds">💵 资金管理</a></li>
+                        <li><a href="/admin/news">📰 资讯管理</a></li>
+                        <li><a href="/admin/auth-applies">✅ 认证审核</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div style="flex: 1;">
+                <div class="card">
+                    <h2>领养申请审核</h2>
+                    <p style="color: #999; margin-top: 5px;">审核用户的领养申请，通过后可安排领养</p>
+
+                    <!-- 标签页 -->
+                    <div class="tab-buttons">
+                        <button class="tab-btn active" onclick="showTab('initial')">待初审 (<span th:text="${pendingInitial != null ? pendingInitial.size() : 0}">0</span>)</button>
+                        <button class="tab-btn" onclick="showTab('interview')">待回访 (<span th:text="${pendingInterview != null ? pendingInterview.size() : 0}">0</span>)</button>
+                        <button class="tab-btn" onclick="showTab('final')">待终审 (<span th:text="${pendingFinal != null ? pendingFinal.size() : 0}">0</span>)</button>
+                    </div>
+
+                    <!-- 待初审列表 -->
+                    <div id="initialTab" class="tab-content active">
+                        <div th:if="${#lists.isEmpty(pendingInitial)}" style="text-align: center; padding: 50px; color: #999;">
+                            <p>暂无待初审的领养申请</p>
+                        </div>
+                        <div th:if="${!#lists.isEmpty(pendingInitial)}">
+                            <table>
+                                <thead>
+                                <tr>
+                                    <th>ID</th><th>申请人</th><th>猫咪</th><th>申请类型</th><th>居住类型</th><th>养宠经验</th><th>申请时间</th><th>操作</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="apply : ${pendingInitial}">
+                                    <td th:text="${apply.id}">1</td>
+                                    <td th:text="${apply.applicantName}">申请人</td>
+                                    <td th:text="${apply.catName}">猫咪名称</td>
+                                    <td th:text="${apply.applyType == 0 ? '直接领养' : '寄养领养'}">直接领养</td>
+                                    <td th:text="${apply.housingType}">居住类型</td>
+                                    <td th:text="${apply.hasExperience == 1 ? '有经验' : '无经验'}">有经验</td>
+                                    <td th:text="${apply.createTime}">2024-01-01</td>
+                                    <td>
+                                        <button class="btn btn-primary" th:onclick="'viewApply(' + ${apply.id} + ')'">查看详情</button>
+                                        <button class="btn btn-success" th:onclick="'passInitial(' + ${apply.id} + ')'">通过</button>
+                                        <button class="btn btn-danger" th:onclick="'rejectApply(' + ${apply.id} + ')'">拒绝</button>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 待回访列表 -->
+                    <div id="interviewTab" class="tab-content">
+                        <div th:if="${#lists.isEmpty(pendingInterview)}" style="text-align: center; padding: 50px; color: #999;">
+                            <p>暂无待回访的领养申请</p>
+                        </div>
+                        <div th:if="${!#lists.isEmpty(pendingInterview)}">
+                            <table>
+                                <thead>
+                                <tr>
+                                    <th>ID</th><th>申请人</th><th>猫咪</th><th>申请类型</th><th>初审意见</th><th>申请时间</th><th>操作</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="apply : ${pendingInterview}">
+                                    <td th:text="${apply.id}">1</td>
+                                    <td th:text="${apply.applicantName}">申请人</td>
+                                    <td th:text="${apply.catName}">猫咪名称</td>
+                                    <td th:text="${apply.applyType == 0 ? '直接领养' : '寄养领养'}">直接领养</td>
+                                    <td th:text="${apply.interviewRecord}">初审意见</td>
+                                    <td th:text="${apply.createTime}">2024-01-01</td>
+                                    <td>
+                                        <button class="btn btn-primary" th:onclick="'viewApply(' + ${apply.id} + ')'">查看详情</button>
+                                        <button class="btn btn-warning" th:onclick="'recordInterview(' + ${apply.id} + ')'">记录回访</button>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 待终审列表 -->
+                    <div id="finalTab" class="tab-content">
+                        <div th:if="${#lists.isEmpty(pendingFinal)}" style="text-align: center; padding: 50px; color: #999;">
+                            <p>暂无待终审的领养申请</p>
+                        </div>
+                        <div th:if="${!#lists.isEmpty(pendingFinal)}">
+                            <table>
+                                <thead>
+                                <tr>
+                                    <th>ID</th><th>申请人</th><th>猫咪</th><th>申请类型</th><th>回访记录</th><th>申请时间</th><th>操作</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="apply : ${pendingFinal}">
+                                    <td th:text="${apply.id}">1</td>
+                                    <td th:text="${apply.applicantName}">申请人</td>
+                                    <td th:text="${apply.catName}">猫咪名称</td>
+                                    <td th:text="${apply.applyType == 0 ? '直接领养' : '寄养领养'}">直接领养</td>
+                                    <td th:text="${apply.interviewRecord}">回访记录</td>
+                                    <td th:text="${apply.createTime}">2024-01-01</td>
+                                    <td>
+                                        <button class="btn btn-primary" th:onclick="'viewApply(' + ${apply.id} + ')'">查看详情</button>
+                                        <button class="btn btn-success" th:onclick="'finalApprove(' + ${apply.id} + ')'">批准</button>
+                                        <button class="btn btn-danger" th:onclick="'finalReject(' + ${apply.id} + ')'">拒绝</button>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 拒绝原因弹窗 -->
+<div id="rejectModal" class="modal">
+    <div class="modal-content">
+        <h3>拒绝申请</h3>
+        <p>请填写拒绝原因：</p>
+        <textarea id="rejectReason" rows="3" placeholder="请输入拒绝原因..."></textarea>
+        <div class="modal-buttons">
+            <button class="btn btn-primary" onclick="confirmReject()">确认拒绝</button>
+            <button class="btn btn-danger" onclick="closeModal()">取消</button>
+        </div>
+    </div>
+</div>
+
+<div class="footer"><div class="container"><p>© 2024 流浪猫救助管理系统 | 用爱心温暖每一个生命</p></div></div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    var currentApplyId = null;
+    var currentAction = null;
+
+    function showTab(tab) {
+        if (tab === 'initial') {
+            document.getElementById('initialTab').classList.add('active');
+            document.getElementById('interviewTab').classList.remove('active');
+            document.getElementById('finalTab').classList.remove('active');
+            document.querySelectorAll('.tab-btn')[0].classList.add('active');
+            document.querySelectorAll('.tab-btn')[1].classList.remove('active');
+            document.querySelectorAll('.tab-btn')[2].classList.remove('active');
+        } else if (tab === 'interview') {
+            document.getElementById('initialTab').classList.remove('active');
+            document.getElementById('interviewTab').classList.add('active');
+            document.getElementById('finalTab').classList.remove('active');
+            document.querySelectorAll('.tab-btn')[0].classList.remove('active');
+            document.querySelectorAll('.tab-btn')[1].classList.add('active');
+            document.querySelectorAll('.tab-btn')[2].classList.remove('active');
+        } else {
+            document.getElementById('initialTab').classList.remove('active');
+            document.getElementById('interviewTab').classList.remove('active');
+            document.getElementById('finalTab').classList.add('active');
+            document.querySelectorAll('.tab-btn')[0].classList.remove('active');
+            document.querySelectorAll('.tab-btn')[1].classList.remove('active');
+            document.querySelectorAll('.tab-btn')[2].classList.add('active');
+        }
+    }
+
+    function viewApply(id) {
+        window.location.href = '/admin/adoption/' + id;
+    }
+
+    // 初审通过
+    function passInitial(id) {
+        if (confirm('确定通过初审吗？')) {
+            $.post('/admin/adoption/initial-review/' + id, { pass: true, opinion: '初审通过' }, function(res) {
+                if (res.code === 200) {
+                    alert('初审通过');
+                    location.reload();
+                } else {
+                    alert(res.message || '操作失败');
+                }
+            });
+        }
+    }
+
+    // 记录回访
+    function recordInterview(id) {
+        var record = prompt('请输入回访记录：', '电话沟通，申请人条件符合');
+        if (record !== null && record.trim() !== '') {
+            $.post('/admin/adoption/record-interview/' + id, { interviewRecord: record }, function(res) {
+                if (res.code === 200) {
+                    alert('回访记录已保存');
+                    location.reload();
+                } else {
+                    alert(res.message || '操作失败');
+                }
+            });
+        } else if (record !== null) {
+            alert('请填写回访记录');
+        }
+    }
+
+    // 初审拒绝
+    function rejectApply(id) {
+        currentApplyId = id;
+        currentAction = 'initial';
+        $('#rejectReason').val('');
+        $('#rejectModal').show();
+    }
+
+    // 终审批准
+    function finalApprove(id) {
+        if (confirm('确定批准这个领养申请吗？')) {
+            $.post('/admin/adoption/final-review/' + id, { pass: true }, function(res) {
+                if (res.code === 200) {
+                    alert('已批准');
+                    location.reload();
+                } else {
+                    alert(res.message || '操作失败');
+                }
+            });
+        }
+    }
+
+    // 终审拒绝
+    function finalReject(id) {
+        currentApplyId = id;
+        currentAction = 'final';
+        $('#rejectReason').val('');
+        $('#rejectModal').show();
+    }
+
+    function confirmReject() {
+        var reason = $('#rejectReason').val();
+        if (!reason) {
+            alert('请填写拒绝原因');
+            return;
+        }
+        var url = currentAction === 'initial' ? '/admin/adoption/initial-review/' + currentApplyId : '/admin/adoption/final-review/' + currentApplyId;
+        $.post(url, { pass: false, opinion: reason, rejectReason: reason }, function(res) {
+            if (res.code === 200) {
+                alert('已拒绝');
+                closeModal();
+                location.reload();
+            } else {
+                alert(res.message || '操作失败');
+            }
+        });
+    }
+
+    function closeModal() {
+        $('#rejectModal').hide();
+        currentApplyId = null;
+        currentAction = null;
+    }
+
+    $(window).click(function(e) {
+        if ($(e.target).is('#rejectModal')) {
+            closeModal();
+        }
+    });
+</script>
+</body>
+</html>

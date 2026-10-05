@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>资金管理 - 管理后台</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Microsoft YaHei', sans-serif; background-color: #f5f5f5; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 0; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        .header .container { display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 24px; font-weight: bold; }
+        .logo a { color: white; text-decoration: none; }
+        .nav { display: flex; gap: 30px; }
+        .nav a { color: white; text-decoration: none; }
+        .user-info a { color: white; text-decoration: none; margin-left: 15px; }
+        .main { min-height: calc(100vh - 200px); padding: 40px 0; }
+        .footer { background-color: #333; color: #999; text-align: center; padding: 30px 0; }
+        .card { background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding: 20px; margin-bottom: 20px; }
+        .btn { display: inline-block; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; text-decoration: none; font-size: 12px; }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .btn-danger { background-color: #dc3545; color: white; }
+        .btn-delete { background-color: #dc3545; color: white; padding: 4px 8px; font-size: 11px; }
+        .admin-sidebar { width: 250px; }
+        .admin-sidebar ul { list-style: none; }
+        .admin-sidebar li { padding: 10px 0; }
+        .admin-sidebar a { color: #333; text-decoration: none; display: block; padding: 8px 12px; border-radius: 5px; }
+        .admin-sidebar a:hover, .admin-sidebar .active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .flex { display: flex; gap: 20px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background-color: #f5f5f5; }
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
+        .stat-card { text-align: center; }
+        .stat-card h3 { margin-bottom: 10px; color: #666; }
+        .stat-card p { font-size: 28px; color: #667eea; font-weight: bold; }
+        .income { color: #28a745; }
+        .expense { color: #dc3545; }
+        .form-group { margin-bottom: 15px; }
+        .form-control { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px; }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            width: 500px;
+            max-width: 90%;
+        }
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .tab-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .tab-btn {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            color: #666;
+        }
+        .tab-btn.active {
+            color: #667eea;
+            border-bottom: 2px solid #667eea;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <div class="container">
+        <div class="logo"><a href="/admin/dashboard">🐱 流浪猫救助管理系统 - 管理后台</a></div>
+        <div class="nav"><a href="/">前台首页</a></div>
+        <div class="user-info"><span>欢迎，<span th:text="${session.user.nickname}"></span></span><a href="/user/logout">退出</a></div>
+    </div>
+</div>
+
+<div class="main">
+    <div class="container">
+        <div class="flex">
+            <div class="admin-sidebar">
+                <div class="card">
+                    <h3>管理菜单</h3>
+                    <ul>
+                        <li><a href="/admin/dashboard">📊 数据仪表盘</a></li>
+                        <li><a href="/admin/users">👥 用户管理</a></li>
+                        <li><a href="/admin/cats">🐱 猫咪管理</a></li>
+                        <li><a href="/admin/clues">📍 线索审核</a></li>
+                        <li><a href="/admin/adoptions">📋 领养审核</a></li>
+                        <li><a href="/admin/donations">💰 捐款管理</a></li>
+                        <li><a href="/admin/funds" class="active">💵 资金管理</a></li>
+                        <li><a href="/admin/news">📰 资讯管理</a></li>
+                        <li><a href="/admin/auth-applies">✅ 认证审核</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div style="flex: 1;">
+                <!-- 资金统计 -->
+                <div class="stats-grid">
+                    <div class="card stat-card">
+                        <h3>💰 总收入</h3>
+                        <p th:text="'¥' + ${stats.totalIncome}">0</p>
+                    </div>
+                    <div class="card stat-card">
+                        <h3>📤 总支出</h3>
+                        <p th:text="'¥' + ${stats.totalExpense}" style="color: #dc3545;">0</p>
+                    </div>
+                    <div class="card stat-card">
+                        <h3>💎 余额</h3>
+                        <p th:text="'¥' + ${stats.balance}">0</p>
+                    </div>
+                    <div class="card stat-card">
+                        <h3>📋 支出笔数</h3>
+                        <p th:text="${expenseCount}">0</p>
+                    </div>
+                </div>
+
+                <!-- 标签页 -->
+                <div class="tab-buttons">
+                    <button class="tab-btn active" onclick="showTab('expense')">💰 支出管理</button>
+                    <button class="tab-btn" onclick="showTab('income')">📈 收入明细</button>
+                    <button class="tab-btn" onclick="showTab('flow')">📋 全部流水</button>
+                </div>
+
+                <!-- 支出管理标签页 -->
+                <div id="expenseTab" class="tab-content active">
+                    <div class="card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h3>添加支出记录</h3>
+                            <button class="btn btn-primary" onclick="openAddExpenseModal()">+ 新增支出</button>
+                        </div>
+
+                        <!-- 支出记录列表 -->
+                        <h4 style="margin: 20px 0 10px;">历史支出记录</h4>
+                        <div th:if="${#lists.isEmpty(expenses)}" style="text-align: center; padding: 20px; color: #999;">
+                            <p>暂无支出记录</p>
+                        </div>
+                        <div th:if="${!#lists.isEmpty(expenses)}">
+                            <table>
+                                <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>支出类型</th>
+                                    <th>用途说明</th>
+                                    <th>金额</th>
+                                    <th>凭证</th>
+                                    <th>操作人</th>
+                                    <th>时间</th>
+                                    <th>操作</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="expense : ${expenses}">
+                                    <td th:text="${expense.id}">1</td>
+                                    <td th:text="${expense.expenseType != null ? expense.expenseType : '其他'}">支出类型</td>
+                                    <td style="max-width: 300px;" th:text="${expense.purpose}">用途说明</td>
+                                    <td style="color: #dc3545;">¥<span th:text="${expense.amount}">0</span></td>
+                                    <td>
+                                        <a th:href="${expense.voucherUrl}" target="_blank" th:if="${expense.voucherUrl}">查看凭证</a>
+                                        <span th:unless="${expense.voucherUrl}">无</span>
+                                    </td>
+                                    <td th:text="${expense.applicantName}">操作人</td>
+                                    <td th:text="${expense.paymentTime != null ? expense.paymentTime : expense.createTime}">时间</td>
+                                    <td>
+                                        <button class="btn btn-delete" th:onclick="'deleteExpense(' + ${expense.id} + ')'">删除</button>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 收入明细标签页 -->
+                <div id="incomeTab" class="tab-content">
+                    <div class="card">
+                        <h3>捐款收入明细</h3>
+                        <div th:if="${#lists.isEmpty(donations)}" style="text-align: center; padding: 30px; color: #999;">
+                            <p>暂无捐款记录</p>
+                        </div>
+                        <div th:if="${!#lists.isEmpty(donations)}">
+                            <table>
+                                <thead>
+                                <tr><th>订单号</th><th>捐款人</th><th>金额</th><th>项目</th><th>时间</th></tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="donation : ${donations}">
+                                    <td th:text="${donation.orderNo}">订单号</td>
+                                    <td th:text="${donation.donorName != null ? donation.donorName : '匿名用户'}">捐款人</td>
+                                    <td style="color: #28a745;">¥<span th:text="${donation.amount}">0</span></td>
+                                    <td>
+                                        <span th:if="${donation.targetType == 0}">通用救助基金</span>
+                                        <span th:if="${donation.targetType == 1}">猫咪医疗基金</span>
+                                        <span th:if="${donation.targetType == 2}">猫咪口粮基金</span>
+                                        <span th:if="${donation.targetType == 3}">定向资助</span>
+                                    </td>
+                                    <td th:text="${donation.createTime}">时间</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 全部流水标签页 -->
+                <div id="flowTab" class="tab-content">
+                    <div class="card">
+                        <h3>全部资金流水</h3>
+                        <div th:if="${#lists.isEmpty(fundFlows)}" style="text-align: center; padding: 30px; color: #999;">
+                            <p>暂无资金流水</p>
+                        </div>
+                        <div th:if="${!#lists.isEmpty(fundFlows)}">
+                            <table>
+                                <thead>
+                                <tr><th>流水号</th><th>类型</th><th>金额</th><th>来源/去向</th><th>时间</th></tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="flow : ${fundFlows}">
+                                    <td th:text="${flow.flowNo}">流水号</td>
+                                    <td><span th:if="${flow.type == 0}" class="income">收入</span><span th:if="${flow.type == 1}" class="expense">支出</span></td>
+                                    <td th:classappend="${flow.type == 0} ? 'income' : 'expense'" th:text="'¥' + ${flow.amount}">0</td>
+                                    <td th:text="${flow.source}">来源/去向</td>
+                                    <td th:text="${flow.createTime}">时间</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 新增支出弹窗 -->
+<div id="addExpenseModal" class="modal">
+    <div class="modal-content">
+        <h3>新增支出记录</h3>
+        <form id="expenseForm">
+            <div class="form-group">
+                <label>支出类型 *</label>
+                <select id="expenseType" class="form-control" required>
+                    <option value="医疗救治">🏥 医疗救治</option>
+                    <option value="猫咪口粮">🍖 猫咪口粮</option>
+                    <option value="疫苗绝育">💉 疫苗绝育</option>
+                    <option value="设施维护">🏠 设施维护</option>
+                    <option value="其他">📦 其他</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>支出金额 *</label>
+                <input type="number" id="expenseAmount" class="form-control" step="0.01" min="0.01" required>
+            </div>
+            <div class="form-group">
+                <label>用途说明 *</label>
+                <textarea id="expensePurpose" class="form-control" rows="3" placeholder="请详细说明支出用途..." required></textarea>
+            </div>
+            <div class="form-group">
+                <label>凭证图片URL</label>
+                <input type="text" id="expenseVoucher" class="form-control" placeholder="请输入发票/收据图片地址（可选）">
+            </div>
+            <div class="modal-buttons">
+                <button type="submit" class="btn btn-primary">确认添加</button>
+                <button type="button" class="btn btn-danger" onclick="closeExpenseModal()">取消</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="footer"><div class="container"><p>© 2024 流浪猫救助管理系统 | 用爱心温暖每一个生命</p></div></div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    function showTab(tab) {
+        document.getElementById('expenseTab').classList.remove('active');
+        document.getElementById('incomeTab').classList.remove('active');
+        document.getElementById('flowTab').classList.remove('active');
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+
+        if (tab === 'expense') {
+            document.getElementById('expenseTab').classList.add('active');
+            document.querySelectorAll('.tab-btn')[0].classList.add('active');
+        } else if (tab === 'income') {
+            document.getElementById('incomeTab').classList.add('active');
+            document.querySelectorAll('.tab-btn')[1].classList.add('active');
+        } else {
+            document.getElementById('flowTab').classList.add('active');
+            document.querySelectorAll('.tab-btn')[2].classList.add('active');
+        }
+    }
+
+    function openAddExpenseModal() {
+        document.getElementById('addExpenseModal').style.display = 'block';
+        document.getElementById('expenseForm').reset();
+    }
+
+    function closeExpenseModal() {
+        document.getElementById('addExpenseModal').style.display = 'none';
+    }
+
+    $('#expenseForm').submit(function(e) {
+        e.preventDefault();
+        var amount = $('#expenseAmount').val();
+        var purpose = $('#expensePurpose').val();
+
+        if (!amount || amount <= 0) {
+            alert('请输入有效的金额');
+            return;
+        }
+        if (!purpose) {
+            alert('请填写用途说明');
+            return;
+        }
+
+        $.ajax({
+            url: '/admin/fund/add',
+            type: 'POST',
+            data: {
+                expenseType: $('#expenseType').val(),
+                amount: amount,
+                purpose: purpose,
+                voucherUrl: $('#expenseVoucher').val()
+            },
+            success: function(res) {
+                if (res.code === 200) {
+                    alert('支出记录已添加并公示');
+                    closeExpenseModal();
+                    location.reload();
+                } else {
+                    alert(res.message || '添加失败');
+                }
+            },
+            error: function() {
+                alert('添加失败，请重试');
+            }
+        });
+    });
+
+    function deleteExpense(id) {
+        if (confirm('确定删除这笔支出记录吗？')) {
+            $.post('/admin/fund/delete/' + id, function(res) {
+                if (res.code === 200) {
+                    alert('删除成功');
+                    location.reload();
+                } else {
+                    alert(res.message || '删除失败');
+                }
+            });
+        }
+    }
+
+    $(window).click(function(e) {
+        if ($(e.target).is('#addExpenseModal')) {
+            closeExpenseModal();
+        }
+    });
+</script>
+</body>
+</html>
